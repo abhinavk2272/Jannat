@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nailsbyjannatx</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fff0f5;
+      color: #333;
+      position: relative;
+    }
+    header {
+      background-color: #ffb6c1;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    header h1 {
+      margin: 0;
+      color: white;
+    }
+    #adminBtn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #ff69b4;
+    }
+    section {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    form input,
+    form select,
+    form button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    form button {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #ffe4e1;
+    }
+
+    /* Modal styles */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #888;
+    }
+    .modal-close:hover {
+      color: #ff69b4;
+    }
+
+    /* Admin panel */
+    #adminPanel {
+      display: none;
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    #adminPanel h2 {
+      margin-top: 0;
+      color: #ff69b4;
+    }
+    #bookingsList {
+      max-height: 300px;
+      overflow-y: auto;
+      border-top: 1px solid #ccc;
+      margin-top: 10px;
+      padding-top: 10px;
+    }
+    .booking-item {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
+    .logout-btn {
+      background: #ff69b4;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Nailsbyjannatx</h1>
+  <button id="adminBtn">Admin Login</button>
+  <p>Book your luxury nails with Jannat!</p>
+</header>
+
+<section>
+  <h2>About Me</h2>
+  <p>Hi, I’m Jannat! I'm a nail tech specializing in custom designs, from minimalist to glam. Based in [Your Location].</p>
+
+  <h2>Book an Appointment</h2>
+  <form id="bookingForm">
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" required />
+
+    <label for="email">Email Address:</label>
+    <input type="email" id="email" required />
+
+    <label for="date">Choose a Date (Mon–Thu):</label>
+    <input type="date" id="date" required />
+
+    <label for="time">Choose a Time:</label>
+    <select id="time" required>
+      <!-- Filled by JavaScript based on date -->
+    </select>
+
+    <button type="submit">Book Now</button>
+  </form>
+
+  <p id="confirmation" style="color: green; font-weight: bold;"></p>
+</section>
+
+<!-- Admin Login Modal -->
+<div id="loginModal" class="modal-bg">
+  <div class="modal-content">
+    <span class="modal-close" id="closeLogin">&times;</span>
+    <h2>Admin Login</h2>
+    <form id="loginForm">
+      <label for="adminPassword">Password:</label>
+      <input type="password" id="adminPassword" required />
+      <button type="submit">Log In</button>
+    </form>
+    <p id="loginError" style="color: red; display:none; margin-top:10px;">Incorrect password.</p>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+  <h2>Booked Appointments</h2>
+  <div id="bookingsList">
+    <!-- Bookings will be listed here -->
+  </div>
+  <button class="logout-btn" id="logoutBtn">Logout</button>
+</div>
+
+<footer>
+  <p>Follow me on Instagram @nailsbyjannatx | Contact: nailsbyjannatx@example.com</p>
+</footer>
+
+<script>
+  // Variables
+  const form = document.getElementById('bookingForm');
+  const timeSelect = document.getElementById('time');
+  const confirmation = document.getElementById('confirmation');
+
+  const adminBtn = document.getElementById('adminBtn');
+  const loginModal = document.getElementById('loginModal');
+  const closeLogin = document.getElementById('closeLogin');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+
+  const adminPanel = document.getElementById('adminPanel');
+  const bookingsList = document.getElementById('bookingsList');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // Password (hardcoded)
+  const ADMIN_PASSWORD = 'admin123';
+
+  // Show time slots for 10am-6pm (hourly)
+  function generateTimeSlots() {
+    timeSelect.innerHTML = '';
+    for (let hour = 10; hour <= 17; hour++) {
+      const timeStr = `${hour}:00 - ${hour + 1}:00`;
+      const option = document.createElement('option');
+      option.value = timeStr;
+      option.textContent = timeStr;
+      timeSelect.appendChild(option);
+    }
+  }
+
+  // Update time options based on selected date (only Mon-Thu)
+  document.getElementById('date').addEventListener('change', function () {
+    const day = new Date(this.value).getDay();
+    if (day === 0 || day === 5 || day === 6) {
+      timeSelect.innerHTML = '';
+      const option = document.createElement('option');
+      option.textContent = 'Closed on this day';
+      timeSelect.appendChild(option);
+    } else {
+      generateTimeSlots();
+    }
+  });
+
+  // Save booking to localStorage
+  function saveBooking(booking) {
+    let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+    bookings.push(booking);
+    localStorage.setItem('bookings', JSON.stringify(bookings));
+  }
+
+  // Load bookings from localStorage
+  function loadBookings() {
+    return JSON.parse(localStorage.getItem('bookings')) || [];
+  }
+
+  // Render bookings list in admin panel
+  function renderBookings() {
+    bookingsList.innerHTML = '';
+    const bookings = loadBookings();
+    if (bookings.length === 0) {
+      bookingsList.innerHTML = '<p>No bookings yet.</p>';
+      return;
+    }
+    bookings.forEach((b, i) => {
+      const div = document.createElement('div');
+      div.classList.add('booking-item');
+      div.innerHTML = `<strong>${b.name}</strong> (${b.email})<br />
+                       Date: ${b.date}<br />
+                       Time: ${b.time}`;
+      bookingsList.appendChild(div);
+    });
+  }
+
+  // Booking form submit
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const date = form.date.value;
+    const time = form.time.value;
+
+    if (!name || !email || !date || !time || time === 'Closed on this day') {
+      alert('Please fill out the form correctly.');
+      return;
+    }
+
+    const booking = { name, email, date, time };
+    saveBooking(booking);
+
+    confirmation.textContent = `Thanks ${name}! Your appointment is booked for ${date} at ${time}.`;
+    form.reset();
+    generateTimeSlots();
+  });
+
+  // Show admin login modal
+  adminBtn.addEventListener('click', () => {
+    loginError.style.display = 'none';
+    loginModal.style.display = 'block';
+  });
+
+  // Close login modal
+  closeLogin.addEventListener('click', () => {
+    loginModal.style.display = 'none';
+  });
+
+  // Admin login form submit
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const password = loginForm.adminPassword.value;
+    if (password === ADMIN_PASSWORD) {
+      loginModal.style.display = 'none';
+      adminPanel.style.display = 'block';
+      adminBtn.style.display = 'none';
+      renderBookings();
+      loginForm.reset();
+    } else {
+      loginError.style.display = 'block';
+    }
+  });
+
+  // Logout admin
+  logoutBtn.addEventListener('click', () => {
+    adminPanel.style.display = 'none';
+    adminBtn.style.display = 'inline-block';
+  });
+
+  // Close modal if clicking outside content
+  window.addEventListener('click', (event) => {
+    if (event.target === loginModal) {
+      loginModal.style.display = 'none';
+    }
+  });
+
+  // Initialize default time slots on page load
+  generateTimeSlots();
+</script>
+</body>
+</html>
